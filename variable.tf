@@ -1,9 +1,29 @@
+variable "env" {
+  type = string
+  default = "dev"
+  description = "Env to deploy to"
+}
+
+variable "image" {
+  type = map
+  description = "Image for container"
+  default = {
+    dev = "nodered/node-red:latest"
+    prod = "nodered/node-red:latest-minimal"
+  }
+}
+
 variable "ext_port" {
-  type = list(any)
+  type = map
 
 
   validation {
-    condition     = max(var.ext_port...) <= 65535 && min(var.ext_port...) > 0
+    condition     = max(var.ext_port["dev"]...) <= 65535 && min(var.ext_port["dev"]...) >= 1980
+    error_message = "The external port must be within the range 0 - 65536."
+  }
+  
+    validation {
+    condition     = max(var.ext_port["prod"]...) < 1980 && min(var.ext_port["prod"]...) >= 1880
     error_message = "The external port must be within the range 0 - 65536."
   }
 }
@@ -24,5 +44,5 @@ variable "int_port" {
 # }
 
 locals {
-  container_count = length(var.ext_port)
+  container_count = length(lookup(var.ext_port, var.env))
 }
